@@ -33,7 +33,7 @@ fn find_number(line:&str, forward:bool) -> u32 {
 }
 
 fn word_to_num(char_vec:Vec<char>) -> Option<u32> {
-    let s = char_vec.iter().cloned().collect::<String>();
+    let s = char_vec.iter().collect::<String>();
     match s.as_str() {
         "zero" => return Some(0),
         "one" => return Some(1),
