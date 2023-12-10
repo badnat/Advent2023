@@ -1,0 +1,47 @@
+#![allow(clippy::needless_return)]
+
+// ========================================================================
+
+use std::collections::HashMap;
+use std::collections::HashSet;
+
+fn main() {
+    let games = include_str!("../input/part1")
+        .trim()
+        .split('\n')
+        .collect::<Vec<&str>>();
+
+    let numbers: Vec<Vec<&str>> = games
+        .into_iter()
+        .map(|s| s.split(':').collect::<Vec<&str>>())
+        .map(|s| *(s.get(1).unwrap_or(&"")))
+        .map(|s| s.split('|').collect::<Vec<&str>>())
+        .collect();
+
+    let mut counts = vec![1; numbers.len()];
+
+    for n in 0..numbers.len() {
+        let winning_numbers: HashSet<u32> = numbers[n]
+            .first()
+            .unwrap()
+            .split_whitespace()
+            .map(|n| n.parse::<u32>().unwrap())
+            .collect();
+
+        let our_numbers: HashSet<u32> = numbers[n]
+            .last()
+            .unwrap()
+            .split_whitespace()
+            .map(|n| n.parse::<u32>().unwrap())
+            .collect();
+
+        let score: u32 = winning_numbers.intersection(&our_numbers).count();
+
+        let mut max = numbers.len();
+        if (n + score < numbers.len()) {
+            max = n + score;
+        }
+    }
+}
+
+// ========================================================================
