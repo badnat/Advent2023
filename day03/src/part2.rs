@@ -15,15 +15,17 @@ use std::collections::HashSet;
 // ========================================================================================
 
 fn main() {
-    let mut schematic = make_schematic(include_str!("../input/part1"));
+    let mut schematic = make_schematic(include_str!("../input/part2"));
 
     schematic.search_for_parts();
 
-    println!("{:?}", schematic.sum_parts());
+    let sum: u32 = schematic.compute_gear_ratios().iter().sum();
+
+    println!("{sum}");
 }
 
 // ========================================================================================
-#[derive(Debug, PartialEq, Eq, Hash)]
+#[derive(Debug, PartialEq, Eq, Hash, Clone)]
 struct Part {
     number: u32,
     row: usize,
@@ -35,7 +37,7 @@ struct Part {
 struct Schematic {
     char_matrix: Vec<Vec<char>>,
     symbol_positions: HashSet<(usize, usize)>,
-    parts: HashSet<Part>,
+    gears: HashSet<Vec<Part>>,
 }
 impl Schematic {
     fn search_for_parts(&mut self) {
@@ -63,13 +65,19 @@ impl Schematic {
             upper_y = pos.1 + 1;
         }
 
+        let mut local_gears: HashSet<Part> = HashSet::new();
+
         for (i, j) in iproduct!(lower_x..=upper_x, lower_y..=upper_y) {
             if i == pos.0 && j == pos.1 {
                 continue;
             }
             if self.char_matrix[i][j].is_ascii_digit() {
-                self.parts.insert(self.find_part((i, j)));
+                local_gears.insert(self.find_part((i, j)));
             }
+        }
+        if local_gears.iter().len() == 2 {
+            let test: Vec<Part> = local_gears.into_iter().collect();
+            self.gears.insert(test);
         }
     }
 
@@ -95,9 +103,14 @@ impl Schematic {
         return make_part(digit_vec, pos.0, span);
     }
 
-    fn sum_parts(&self) -> u32 {
-        let sum = self.parts.iter().map(|p| p.number).sum();
-        return sum;
+    fn compute_gear_ratios(&self) -> Vec<u32> {
+        let gear_ratios = self
+            .gears
+            .clone()
+            .into_iter()
+            .map(|g| g.into_iter().map(|p| p.number).product())
+            .collect(); // Crab
+        return gear_ratios;
     }
 }
 
@@ -121,7 +134,7 @@ fn make_schematic(input: &str) -> Schematic {
     let schematic = Schematic {
         char_matrix,
         symbol_positions,
-        parts: HashSet::new(),
+        gears: HashSet::new(),
     };
     return schematic;
 }

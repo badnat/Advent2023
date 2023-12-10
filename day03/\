@@ -10,20 +10,23 @@
 // Store these digits and loop around those to see if any other symbols touch and remove those from
 // the set of symbol positions
 use itertools::iproduct;
+use std::cmp::max;
 use std::collections::HashSet;
+use std::task::Wake;
 
 // ========================================================================================
 
 fn main() {
-    let mut schematic = make_schematic(include_str!("../input/part1"));
+    let schematic = make_schematic(include_str!("../input/part1"));
+    println!("{:?}", schematic.symbol_positions);
 
-    schematic.search_for_parts();
-
-    println!("{:?}", schematic.sum_parts());
+    for pos in &schematic.symbol_positions {
+        schematic.adjacent_search(*pos);
+    }
 }
 
 // ========================================================================================
-#[derive(Debug, PartialEq, Eq, Hash)]
+
 struct Part {
     number: u32,
     row: usize,
@@ -35,16 +38,9 @@ struct Part {
 struct Schematic {
     char_matrix: Vec<Vec<char>>,
     symbol_positions: HashSet<(usize, usize)>,
-    parts: HashSet<Part>,
 }
 impl Schematic {
-    fn search_for_parts(&mut self) {
-        for pos in self.symbol_positions.clone() {
-            self.adjacent_search(pos);
-        }
-    }
-
-    fn adjacent_search(&mut self, pos: (usize, usize)) {
+    fn adjacent_search(&self, pos: (usize, usize)) {
         let mut lower_x = 0;
         let mut lower_y = 0;
         if pos.0 != lower_x {
@@ -68,36 +64,30 @@ impl Schematic {
                 continue;
             }
             if self.char_matrix[i][j].is_ascii_digit() {
-                self.parts.insert(self.find_part((i, j)));
+                println!("{:?}", self.find_part((i, j)));
             }
         }
     }
 
-    fn find_part(&self, pos: (usize, usize)) -> Part {
+    fn find_part(&self, pos: (usize, usize)) -> Vec<char> {
         let mut digit_vec = vec![];
-        let mut span = (pos.1, pos.1);
         for y_back in (0..pos.1).rev() {
             if self.char_matrix[pos.0][y_back].is_ascii_digit() {
                 digit_vec.insert(0, self.char_matrix[pos.0][y_back]);
-                span.0 = y_back;
+                println!("{}", self.char_matrix[pos.0][y_back]);
             } else {
                 break;
             }
         }
-        for y_forward in pos.1..self.char_matrix[0].len() {
+        for y_forward in pos.1..=self.char_matrix[0].len() {
             if self.char_matrix[pos.0][y_forward].is_ascii_digit() {
                 digit_vec.push(self.char_matrix[pos.0][y_forward]);
-                span.1 = y_forward;
             } else {
+                println!("{}", self.char_matrix[pos.0][y_forward])
                 break;
             }
         }
-        return make_part(digit_vec, pos.0, span);
-    }
-
-    fn sum_parts(&self) -> u32 {
-        let sum = self.parts.iter().map(|p| p.number).sum();
-        return sum;
+        return digit_vec;
     }
 }
 
@@ -121,20 +111,10 @@ fn make_schematic(input: &str) -> Schematic {
     let schematic = Schematic {
         char_matrix,
         symbol_positions,
-        parts: HashSet::new(),
     };
     return schematic;
 }
 
 fn is_symbol(c: char) -> bool {
     return !(c.is_ascii_digit() || (c == '.'));
-}
-
-fn make_part(digit_array: Vec<char>, row: usize, span: (usize, usize)) -> Part {
-    let part = Part {
-        number: digit_array.into_iter().collect::<String>().parse().unwrap(),
-        row,
-        span,
-    };
-    return part;
 }
